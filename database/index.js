@@ -6,17 +6,17 @@ require("dotenv").config();
  * But will cause problems in production environment
  * If - else will make determination which to use
  * *************** */
-let pool;
-if (process.env.NODE_ENV == "development") {
-	pool = new Pool({
-		connectionString: process.env.DATABASE_URL,
-		ssl: {
-			rejectUnauthorized: false,
-		},
-	});
 
-	// Added for troubleshooting queries
-	// during development
+const pool = new Pool({
+	connectionString: process.env.DATABASE_URL,
+	ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('render.com') 
+    ? { rejectUnauthorized: false } 
+    : false
+});
+
+// Added for troubleshooting queries
+// during development
+if (process.env.NODE_ENV === "development") {
 	module.exports = {
 		async query(text, params) {
 			try {
@@ -30,8 +30,6 @@ if (process.env.NODE_ENV == "development") {
 		},
 	};
 } else {
-	pool = new Pool({
-		connectionString: process.env.DATABASE_URL,
-	});
+	// Export the pool for production use
 	module.exports = pool;
 }
