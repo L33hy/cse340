@@ -19,6 +19,8 @@ const utilities = require("./utilities");
 const accountRoute = require("./routes/accountRoute");
 const cartRoute = require("./routes/cartRoute");
 const bodyParser = require("body-parser");
+const path = require("path");
+
 
 /* ***********************
  * Middleware
@@ -62,6 +64,14 @@ app.use(utilities.setCartCount);
 app.set("view engine", "ejs");
 app.use(expressLayouts);
 app.set("layout", "./layouts/layout");
+
+/* ***********************
+ * Static Files - Add this before your routes
+ *************************/
+app.use(express.static("public"));
+app.use("/css", express.static(path.join(__dirname, "public", "css")));
+app.use("/js", express.static(path.join(__dirname, "public", "js")));
+app.use("/images", express.static(path.join(__dirname, "public", "images")));
 
 /* ***********************
  * Routes
