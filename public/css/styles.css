@@ -88,6 +88,22 @@ nav ul li a {
 	text-decoration: none;
 }
 
+/* Add this to your CSS file */
+nav ul li a:hover {
+    color: var(--white);
+    background-color: var(--primary-color);
+    transform: translateY(-2px);
+    transition: all var(--transition-speed);
+	padding: 0.8rem;
+	border-radius: var(--border-radius);
+}
+
+nav ul li a.active {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border-radius: 4px;
+}
+
 .top-nav {
 	display: flex;
 	gap: 1rem;
