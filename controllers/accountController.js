@@ -97,55 +97,65 @@ async function registerAccount(req, res, next) {
  *  Process login request
  * ************************************ */
 async function accountLogin(req, res) {
-	let nav = await utilities.getNav();
-	const { account_email, account_password } = req.body;
-	const accountData = await accountModel.getAccountByEmail(account_email);
-	if (!accountData) {
-		req.flash("notice", "Please check your credentials and try again.");
-		res.status(400).render("account/login", {
-			title: "Login",
-			nav,
-			errors: null,
-			account_email,
-		});
-		return;
-	}
-	try {
-		if (await bcrypt.compare(account_password, accountData.account_password)) {
-			delete accountData.account_password;
-			const accessToken = jwt.sign(
-				accountData,
-				process.env.ACCESS_TOKEN_SECRET,
-				{ expiresIn: 3600 * 1000 }
-			);
-			if (process.env.NODE_ENV === "development") {
-				res.cookie("jwt", accessToken, { httpOnly: true, maxAge: 3600 * 1000 });
-			} else {
-				res.cookie("jwt", accessToken, {
-					httpOnly: true,
-					secure: true,
-					maxAge: 3600 * 1000,
-				});
-			}
-			req.flash("notice", `Welcome ${accountData.account_firstname}`);
-			res.locals.loggedin = 1;
-			res.locals.accountData = accountData;
-			return res.redirect("/account/");
-		} else {
-			req.flash(
-				"message notice",
-				"Please check your credentials and try again."
-			);
-			res.status(400).render("account/login", {
-				title: "Login",
-				nav,
-				errors: null,
-				account_email,
-			});
-		}
-	} catch (error) {
-		throw new Error("Access Forbidden");
-	}
+    let nav = await utilities.getNav();
+    const { account_email, account_password } = req.body;
+    
+    try {
+        const accountData = await accountModel.getAccountByEmail(account_email);
+        
+        if (!accountData) {
+            req.flash("notice", "Please check your credentials and try again.");
+            res.status(400).render("account/login", {
+                title: "Login",
+                nav,
+                errors: null,
+                account_email,
+            });
+            return;
+        }
+
+        if (await bcrypt.compare(account_password, accountData.account_password)) {
+            delete accountData.account_password;
+            const accessToken = jwt.sign(
+                accountData,
+                process.env.ACCESS_TOKEN_SECRET,
+                { expiresIn: 3600 * 1000 }
+            );
+            
+            if (process.env.NODE_ENV === "development") {
+                res.cookie("jwt", accessToken, { httpOnly: true, maxAge: 3600 * 1000 });
+            } else {
+                res.cookie("jwt", accessToken, {
+                    httpOnly: true,
+                    secure: true,
+                    maxAge: 3600 * 1000,
+                });
+            }
+            
+            req.flash("notice", `Welcome ${accountData.account_firstname}`);
+            res.locals.loggedin = 1;
+            res.locals.accountData = accountData;
+            return res.redirect("/account/");
+        } else {
+            req.flash("notice", "Please check your credentials and try again.");
+            res.status(400).render("account/login", {
+                title: "Login",
+                nav,
+                errors: null,
+                account_email,
+            });
+        }
+    } catch (error) {
+        // Proper error handling instead of throwing "Access Forbidden"
+        console.error("Login error:", error.message);
+        req.flash("notice", "Sorry, there was an error processing the login. Please try again.");
+        res.status(500).render("account/login", {
+            title: "Login",
+            nav,
+            errors: null,
+            account_email,
+        });
+    }
 }
 
 /* ****************************************
