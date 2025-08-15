@@ -165,7 +165,7 @@ Util.checkJWTToken = (req, res, next) => {
 };
 
 Util.setCartCount = async (req, res, next) => {
-	if (res.locals.loggedin && res.locals.accountData.account_type === "Client") {
+	if (res.locals.loggedin && res.locals.accountData && res.locals.accountData.account_type === "Client") {
 		try {
 			const count = await cartModel.getCartCount(
 				res.locals.accountData.account_id
