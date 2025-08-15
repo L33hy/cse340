@@ -45,6 +45,11 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
+//temporary logging 
+require("dotenv").config();
+console.log("ACCESS_TOKEN_SECRET:", process.env.ACCESS_TOKEN_SECRET ? "SET" : "NOT SET");
+console.log("SESSION_SECRET:", process.env.SESSION_SECRET ? "SET" : "NOT SET");
+
 // Express Messages Middleware
 app.use(require("connect-flash")());
 app.use(function (req, res, next) {
@@ -77,9 +82,9 @@ app.use("/images", express.static(path.join(__dirname, "public", "images")));
  * Routes
  *************************/
 app.use(static);
-app.use("/inv", utilities.handleErrors(inventoryRoute));
-app.use("/account", utilities.handleErrors(accountRoute));
-app.use("/cart", utilities.handleErrors(cartRoute));
+app.use("/inv", inventoryRoute);
+app.use("/account", accountRoute);
+app.use("/cart", cartRoute);
 
 // Index route
 app.get("/", utilities.handleErrors(baseController.buildHome));
@@ -100,20 +105,35 @@ app.use(
  * Place after all other middleware
  *************************/
 app.use(async (err, req, res, next) => {
-	let nav = await utilities.getNav();
-	console.error(`Error at: "${req.originalUrl}": ${err.message}`);
-	if (err.status == 404) {
-		message = err.message;
-	} else {
-		message =
-			"OOPS!! We broke the steering Wheel on that request, guess we'll just have to carpool <a href='/'>home</a>";
-	}
-	res.render("errors/error", {
-		title: err.status || "Server Error",
-		message,
-		nav,
-	});
+    // Enhanced logging to find the exact error source
+    console.error('=== ERROR DETAILS ===');
+    console.error(`URL: ${req.originalUrl}`);
+    console.error(`Method: ${req.method}`);
+    console.error(`Error Message: ${err.message}`);
+    console.error(`Error Status: ${err.status}`);
+    console.error('Stack trace:');
+    console.error(err.stack);
+    console.error('=== END ERROR DETAILS ===');
+
+    let nav;
+    try {
+        nav = await utilities.getNav();
+    } catch (navError) {
+        console.error('Error getting nav:', navError.message);
+        nav = '<ul><li><a href="/">Home</a></li></ul>'; // Fallback nav
+    }
+
+    const message = err.status == 404 
+        ? err.message
+        : "OOPS!! We broke the steering Wheel on that request, guess we'll just have to carpool <a href='/'>home</a>";
+
+    res.render("errors/error", {
+        title: err.status || "Server Error",
+        message,
+        nav,
+    });
 });
+
 
 /* ***********************
  * Local Server Information
