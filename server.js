@@ -39,11 +39,20 @@ app.use(
 		resave: true,
 		saveUninitialized: true,
 		name: "sessionId",
+        cookie: {
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== 'development', // true on Render
+            sameSite: process.env.NODE_ENV !== 'development' ? 'none' : 'lax',
+            maxAge: 1000 * 60 * 60 * 2 // 2 hours
+        }
 	})
-);
+); 
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+// Tell express it is behind a proxy (Render/Heroku, etc.) so it correctly sets secure cookies
+app.set('trust proxy', 1);
 
 //temporary logging 
 require("dotenv").config();
@@ -145,6 +154,6 @@ const host = process.env.HOST || "localhost";
 /* ***********************
  * Log statement to confirm server operation
  *************************/
-app.listen(port, '0.0.0.0', () => {
-	console.log(`Server runnning on Port ${port}`);
+app.listen(port, () => {
+	console.log(`Server runnning on Port ${host} ${port}`);
 });
