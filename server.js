@@ -12,6 +12,7 @@ const express = require("express");
 const expressLayouts = require("express-ejs-layouts");
 const env = require("dotenv").config();
 const app = express();
+app.set('trust proxy', 1);
 const static = require("./routes/static");
 const baseController = require("./controllers/baseController");
 const inventoryRoute = require("./routes/inventoryRoute");
@@ -50,9 +51,6 @@ app.use(
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-
-// Tell express it is behind a proxy (Render/Heroku, etc.) so it correctly sets secure cookies
-app.set('trust proxy', 1);
 
 //temporary logging 
 require("dotenv").config();
