@@ -119,18 +119,14 @@ async function accountLogin(req, res) {
             const accessToken = jwt.sign(
                 accountData,
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: 3600 * 1000 }
+                { expiresIn: 3600 }
             );
             
-            if (process.env.NODE_ENV === "development") {
-                res.cookie("jwt", accessToken, { httpOnly: true, maxAge: 3600 * 1000 });
-            } else {
-                res.cookie("jwt", accessToken, {
-                    httpOnly: true,
-                    secure: true,
-                    maxAge: 3600 * 1000,
-                });
-            }
+            const cookieOptions = (process.env.NODE_ENV === "development")
+                ? { httpOnly: true, maxAge: 3600 * 1000, sameSite: "lax" }
+                : { httpOnly: true, secure: true, sameSite: "none", 
+                maxAge: 3600 * 1000 };
+            res.cookie("jwt", accessToken, cookieOptions);
             
             req.flash("notice", `Welcome ${accountData.account_firstname}`);
             res.locals.loggedin = 1;
@@ -162,7 +158,11 @@ async function accountLogin(req, res) {
  *  Process logout request
  * ************************************ */
 async function accountLogout(req, res) {
-	res.clearCookie("jwt");
+	res.clearCookie("jwt", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV !== "development",
+    sameSite: process.env.NODE_ENV !== "development" ? "none" : "lax",
+  });
 	res.locals.loggedin = 0;
 	res.locals.accountData = null;
 	req.flash("notice", "You have been logged out.");
@@ -229,19 +229,15 @@ async function updateAccount(req, res, next) {
       const accessToken = jwt.sign(
         accountData,
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: 3600 * 1000 }
+        { expiresIn: 3600 }
       )
       
       // Set the new token as a cookie
-      if (process.env.NODE_ENV === "development") {
-        res.cookie("jwt", accessToken, { httpOnly: true, maxAge: 3600 * 1000 })
-      } else {
-        res.cookie("jwt", accessToken, {
-          httpOnly: true,
-          secure: true,
-          maxAge: 3600 * 1000,
-        })
-      }
+      const cookieOptions = (process.env.NODE_ENV === "development")
+        ? { httpOnly: true, maxAge: 3600 * 1000, sameSite: "lax" }
+        : { httpOnly: true, secure: true, sameSite: "none", maxAge: 3600 * 1000 };
+
+      res.cookie("jwt", accessToken, cookieOptions);
       
       // Update locals for immediate view update
       res.locals.accountData = accountData
